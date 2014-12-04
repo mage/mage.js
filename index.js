@@ -235,7 +235,7 @@ function createUserCommand(params, execPath) {
 
 	var body = [];
 
-	body.push('var httpServer = require(\'mage\').httpServer;');
+	body.push('var httpServer = require(\'mage.js\').httpServer;');
 	body.push('var params = {');
 
 	for (var i = 0; i < params.length; i += 1) {
