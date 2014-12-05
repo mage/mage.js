@@ -226,31 +226,77 @@ function setupModules(mage, modNames, cb) {
 }
 
 
-function createUserCommand(params, execPath) {
+function createUserCommand(httpServer, modName, cmdName, params) {
+	// function name (camelCase)
+
+	var fnName = modName + cmdName[0].toUpperCase() + cmdName.slice(1);
+
 	// function arguments
 
-	var args = params.concat('cb').join(', ');
+	params = params.concat('cb');
+
+	var args = params.join(', ');
+
+	// expected use
+
+	var expected = modName + '.' + cmdName + '(' + args + ')';
+
+	// real use
+
+	/*jshint unused:false*/
+	function serializeActualUse(args) {
+		var result = [];
+
+		for (var i = 0; i < args.length; i += 1) {
+			var arg = args[i];
+
+			if (typeof arg === 'function') {
+				arg = 'Function';
+			} else {
+				arg = JSON.stringify(arg);
+			}
+
+			result.push(arg);
+		}
+
+		return modName + '.' + cmdName + '(' + result.join(', ') + ')';
+	}
 
 	// function body
 
 	var body = [];
 
-	body.push('var httpServer = require(\'mage.js\').httpServer;');
-	body.push('var params = {');
+	body.push('fn = function ' + fnName + '(' + args + ') {');
+	body.push('\tvar params = {');
 
 	for (var i = 0; i < params.length; i += 1) {
-		body.push('\t' + params[i] + ': ' + params[i] + (i < params.length - 1 ? ',' : ''));
+		body.push('\t\t' + params[i] + ': ' + params[i] + (i < params.length - 1 ? ',' : ''));
 	}
 
+	body.push('\t};');
+	body.push('');
+	body.push('\ttry {');
+	body.push('\t\thttpServer.sendCommand(' + JSON.stringify(modName + '.' + cmdName) + ', params, cb);');
+	body.push('\t} catch (error) {');
+	body.push('\t\tconsole.warn(' + JSON.stringify('Expected use: ' + expected) + ');');
+	body.push('\t\tconsole.warn("Actual use: " + serializeActualUse(arguments));');
+	body.push('\t\tthrow error;');
+	body.push('\t};');
 	body.push('};');
-	body.push('httpServer.sendCommand(' + JSON.stringify(execPath) + ', params, cb);\n');
 
-	var functionBody = '\t' + body.join('\n\t');
-
-	// instantiate and return the function
+	body = body.join('\n');
 
 	/*jshint evil:true */
-	return new Function(args, functionBody);
+	var fn;
+
+	try {
+		eval(body);
+	} catch (e) {
+		console.error('Error generating usercommand:', modName + '.' + cmdName);
+		throw e;
+	}
+
+	return fn;
 }
 
 
@@ -262,7 +308,17 @@ Mage.prototype.useModules = function () {
 	}
 
 	var userCommands = this.config.userCommands;
-	var execPaths = Object.keys(userCommands);
+	var commands = {};
+
+	for (var name in userCommands) {
+		var userCommand = userCommands[name];
+
+		if (!commands[userCommand.gameModule]) {
+			commands[userCommand.gameModule] = []
+		}
+
+		commands[userCommand.gameModule].push({ name: userCommand.cmdName, params: userCommand.mod.params });
+	}
 
 	for (var i = 1; i < arguments.length; i += 1) {
 		var name = arguments[i];
@@ -289,14 +345,15 @@ Mage.prototype.useModules = function () {
 
 		modules[name] = this[name] = mod;
 
-		for (var j = 0; j < execPaths.length; j += 1) {
-			var execPath = execPaths[j];
-			var uc = userCommands[execPath];
+		var modCommands = commands[name];
 
-			if (uc.gameModule === name) {
-				hasImplementation = true;
+		if (modCommands && modCommands.length > 0) {
+			hasImplementation = true;
 
-				mod[uc.cmdName] = createUserCommand(uc.mod.params || [], execPath);
+			for (var j = 0; j < modCommands.length; j += 1) {
+				var cmd = modCommands[j];
+
+				mod[cmd.name] = createUserCommand(this.httpServer, name, cmd.name, cmd.params || []);
 			}
 		}
 
