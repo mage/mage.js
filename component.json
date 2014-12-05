@@ -1,5 +1,5 @@
 {
-	"name": "mage.js",
+	"name": "mage",
 	"repo": "mage/mage.js",
 	"version": "0.1.0",
 	"description": "MAGE's javscript client",
