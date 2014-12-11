@@ -104,58 +104,39 @@ Mage.prototype.configure = function (config) {
 		throw new Error('Mage requires a config to be instantiated.');
 	}
 
-	var that = this;
-
 	this.config = config;
 
 	this.appName = config.appName;
 	this.appConfig = config.appConfig || {};
 	this.appVersion = config.appVersion;
 	this.appVariants = config.appVariants;
-	this.clientHostBaseUrl = config.clientHostBaseUrl;
-	this.savvyBaseUrl = config.savvyBaseUrl;
 	this.language = loader.clientConfig.language;
 	this.density = loader.clientConfig.density;
 
-	// set up httpServer
+	// set up server connections
 
-	var httpWithCredentials = config.cors && config.cors.credentials ? true : false;
+	this.clientHostBaseUrl = config.baseUrl;
+	this.savvyBaseUrl = config.server.savvy.url; // TODO: what about server.savvy.cors?
 
-	this.httpServer.setupCommandSystem({
-		url: config.clientHostBaseUrl + '/' + config.appName,
-		httpOptions: {
-			timeout: config.timeout || 15000,
-			withCredentials: httpWithCredentials,
-			noCache: true
-		}
-	});
+	this.httpServer.setupCommandSystem(config.server.commandCenter);
 
-	// set up msgServer
-	// When a session key is available, start the message stream.
-	// If the key changes, make the event system aware (by simply calling setupMessageStream again)
+	if (this.msgServer.setupMessageStream(config.server.msgStream)) {
+		var that = this;
 
-	if (!config.msgStreamUrl) {
-		return;
+		// When a session key is available, start the message stream.
+		// If the key changes, make the event system aware (by simply calling setupMessageStream again)
+
+		this.once('created.session', function () {
+			that.eventManager.on('session.set', function (path, session) {
+				that.msgServer.setSessionKey(session.key);
+				that.msgServer.start();
+			});
+
+			that.eventManager.on('session.unset', function () {
+				that.msgServer.abort();
+			});
+		});
 	}
-
-	var msgStreamConfig = {
-		url: config.msgStreamUrl,
-		httpOptions: {
-			withCredentials: httpWithCredentials,
-			noCache: true
-		}
-	};
-
-	this.once('created.session', function () {
-		that.eventManager.on('session.set', function (path, session) {
-			that.msgServer.setupMessageStream(msgStreamConfig, session.key);
-			that.msgServer.start();
-		});
-
-		that.eventManager.on('session.unset', function () {
-			that.msgServer.abort();
-		});
-	});
 };
 
 
@@ -307,18 +288,7 @@ Mage.prototype.useModules = function () {
 		throw new TypeError('useModules: the first argument must be require.');
 	}
 
-	var userCommands = this.config.userCommands;
-	var commands = {};
-
-	for (var name in userCommands) {
-		var userCommand = userCommands[name];
-
-		if (!commands[userCommand.gameModule]) {
-			commands[userCommand.gameModule] = []
-		}
-
-		commands[userCommand.gameModule].push({ name: userCommand.cmdName, params: userCommand.mod.params });
-	}
+	var commands = this.config.server.commandCenter.commands;
 
 	for (var i = 1; i < arguments.length; i += 1) {
 		var name = arguments[i];
