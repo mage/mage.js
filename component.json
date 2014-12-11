@@ -1,15 +1,15 @@
 {
 	"name": "mage",
 	"repo": "mage/mage.js",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"description": "MAGE's javscript client",
 	"dependencies": {
 		"component/emitter": "1.1.3",
 		"component/inherit": "0.0.3",
 		"mage/event-manager.js": "0.1.1",
-		"mage/http-server.js": "0.1.0",
-		"mage/loader.js": "0.1.2",
-		"mage/message-server.js": "0.1.0"
+		"mage/http-server.js": "0.1.1",
+		"mage/loader.js": "0.2.0",
+		"mage/message-server.js": "0.2.0"
 	},
 	"scripts": [
 		"index.js"
