@@ -1,5 +1,5 @@
-var EventEmitter = require('emitter');
-var inherits = require('inherit');
+var EventEmitter = require('events');
+var inherits = require('util').inherits;
 var EventManager = require('mage-event-manager.js');
 var HttpServer = require('mage-http-server.js');
 var MsgServer = require('mage-message-server.js');

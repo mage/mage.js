@@ -1,5 +1,10 @@
 # mage.js changelog
 
+## v0.2.2
+ * Updated dependency mage-loader.js from v0.2.0 to v0.2.1
+ * Updated dependency mage-message-server.js from v0.2.2 to v0.2.3
+ * Replaced component/inherits and component/emitter with Wizcorp counterparts.
+
 ## v0.2.1
  * Updated dependency mage-message-server.js from v0.2.0 to v0.2.2
 
