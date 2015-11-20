@@ -1,7 +1,7 @@
 {
 	"name": "mage",
 	"repo": "mage/mage.js",
-	"version": "0.2.2",
+	"version": "0.2.3",
 	"description": "MAGE's JavaScript client",
 	"dependencies": {
 		"Wizcorp/util": "0.1.0",
@@ -9,7 +9,7 @@
 		"mage/event-manager.js": "0.1.1",
 		"mage/http-server.js": "0.1.1",
 		"mage/loader.js": "0.2.1",
-		"mage/message-server.js": "0.2.3"
+		"mage/message-server.js": "0.2.4"
 	},
 	"scripts": [
 		"index.js"
