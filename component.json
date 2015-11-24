@@ -1,7 +1,7 @@
 {
 	"name": "mage",
 	"repo": "mage/mage.js",
-	"version": "0.2.3",
+	"version": "0.2.4",
 	"description": "MAGE's JavaScript client",
 	"dependencies": {
 		"Wizcorp/util": "0.1.0",
